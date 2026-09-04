@@ -1,0 +1,37 @@
+name: Label issues based on keywords
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Label issues based on keywords
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const issueBody = context.payload.issue.body.toLowerCase();
+          const keywordMap = {
+            'bug': ['error'],
+            'feature': ['add']
+          };
+          
+          const labelsToAdd = [];
+          
+          for (const [label, keywords] of Object.entries(keywordMap)) {
+            if (keywords.some(keyword => issueBody.includes(keyword))) {
+              labelsToAdd.push(label);
+            }
+          }
+          
+          if (labelsToAdd.length > 0) {
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: labelsToAdd
+            });
+          }
